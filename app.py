@@ -202,7 +202,7 @@ def health_check():
             'upload_folder': UPLOAD_FOLDER,
             'version': '3.0',
             'celery_workers': len(active_workers) if active_workers else 0,
-            'redis_url': os.getenv('REDIS_URL', 'redis://localhost:6379/0')
+            'redis_url': os.getenv('REDIS_URL', 'redis://red-d1dov1mr433s73fkt63g:6379')
         })
     except Exception as e:
         return jsonify({
