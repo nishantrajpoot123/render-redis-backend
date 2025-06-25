@@ -20,7 +20,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Initialize Celery
-redis_url = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
+redis_url = os.getenv('REDIS_URL', 'redis://red-d1dov1mr433s73fkt63g:6379')
 celery_app = Celery('sds_processor', broker=redis_url, backend=redis_url)
 
 # Celery configuration
