@@ -16,7 +16,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
+CORS(app, resources={r"/api/*": {"origins": ["https://extractmsds.vercel.app", "http://localhost:3000"]}})
 
 # Configuration
 UPLOAD_FOLDER = '/tmp/sds_uploads'
