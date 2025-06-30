@@ -176,12 +176,14 @@ def upload_files():
         logger.info(f"   Total PDF size: {total_pdf_size / 1024:.2f} KB")
         logger.info(f"   Excel size: {os.path.getsize(excel_path) / 1024:.2f} KB")
         
-        # Start Celery task with enhanced parameters
+        # Replace the task_params section in your upload_files() function with this:
+
+        # Start Celery task with correct parameters
         task_params = {
             'session_id': session_id,
             'pdf_file_paths': pdf_paths,
             'excel_file_path': excel_path,
-            'processed_dir': processed_dir,
+            # Remove 'processed_dir' - the task should construct this path internally
             'merge_duplicates': merge_duplicates,
             'duplicate_check': duplicate_check
         }
@@ -192,6 +194,7 @@ def upload_files():
                 logger.info(f"   {key}: {value}")
         
         task = process_sds_files.delay(**task_params)
+
         
         logger.info(f"✅ Started Celery task {task.id} for session {session_id}")
         
