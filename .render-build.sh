@@ -5,7 +5,7 @@ set -e
 pip install --upgrade pip setuptools wheel
 
 # Install pandas via binary wheel only (avoid Meson/Cython build)
-pip install --only-binary :all: pandas==2.2.2
+pip install --only-binary :all: pandas==2.3.0
 
 # Install remaining dependencies
 pip install -r requirements.txt
