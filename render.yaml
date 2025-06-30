@@ -2,6 +2,6 @@ services:
   - type: web
     name: your-service-name
     env: python
-    buildCommand: pip install -r requirements.txt
+    buildCommand: bash .render-build.sh
     startCommand: gunicorn app:app  # or whatever your start command is
     runtime: python-3.10.12
