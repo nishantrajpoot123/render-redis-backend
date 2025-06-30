@@ -16,7 +16,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-CORS(app, resources={r"/api/*": {"origins": ["https://extractmsds.vercel.app", "http://localhost:3000"]}})
+CORS(app, resources={r"/api/*": {"origins": ["https://msds-sigma.vercel.app", "http://localhost:3000"]}})
 
 # Configuration
 UPLOAD_FOLDER = '/tmp/sds_uploads'
