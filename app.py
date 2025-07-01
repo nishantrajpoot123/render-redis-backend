@@ -179,53 +179,84 @@ def download_file(session_id, filename):
         return jsonify({'error': f'Error downloading file: {str(e)}'}), 500
 
 # Alternative: Download processed file by session_id only
+# Replace your download endpoints in app.py with this improved version
+
 @app.route('/api/download/<session_id>', methods=['GET'])
 def download_processed_file(session_id):
+    """Download the processed file by session_id"""
     try:
-        upload_dir = f"/tmp/sds_uploads/{session_id}"
+        session_dir = os.path.join(UPLOAD_FOLDER, session_id)
         
-        # Look for common processed file names
-        possible_files = [
-            'processed_sds_data.xlsx',
-            'sds_extraction_results.xlsx',
-            'output.xlsx',
-            'Book1_processed.xlsx',  # Based on your original Book1.xlsx
-            'merged_data.xlsx'
-        ]
+        # Look for the processed file with exact name
+        processed_file_path = os.path.join(session_dir, 'sds_extraction_results.xlsx')
         
-        processed_file = None
-        for filename in possible_files:
-            file_path = os.path.join(upload_dir, filename)
-            if os.path.exists(file_path):
-                processed_file = file_path
-                break
+        if os.path.exists(processed_file_path):
+            logger.info(f"Serving file: {processed_file_path}")
+            return send_file(
+                processed_file_path, 
+                as_attachment=True, 
+                download_name='sds_extraction_results.xlsx',
+                mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            )
         
-        # If no processed file found, list all Excel files in directory
-        if not processed_file:
-            excel_files = [f for f in os.listdir(upload_dir) if f.endswith('.xlsx')]
+        # Fallback: look for any Excel file in the session directory
+        if os.path.exists(session_dir):
+            excel_files = [f for f in os.listdir(session_dir) if f.endswith('.xlsx')]
             if excel_files:
                 # Take the most recently modified Excel file
-                excel_files_with_time = [(f, os.path.getmtime(os.path.join(upload_dir, f))) for f in excel_files]
+                excel_files_with_time = [
+                    (f, os.path.getmtime(os.path.join(session_dir, f))) 
+                    for f in excel_files
+                ]
                 newest_file = max(excel_files_with_time, key=lambda x: x[1])[0]
-                processed_file = os.path.join(upload_dir, newest_file)
+                file_path = os.path.join(session_dir, newest_file)
+                
+                logger.info(f"Serving fallback file: {file_path}")
+                return send_file(
+                    file_path, 
+                    as_attachment=True, 
+                    download_name='sds_extraction_results.xlsx',
+                    mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                )
         
-        if processed_file and os.path.exists(processed_file):
-            return send_file(processed_file, 
-                           as_attachment=True, 
-                           download_name='sds_extraction_results.xlsx')
+        # Debug: List all files in the directory
+        if os.path.exists(session_dir):
+            files_in_dir = os.listdir(session_dir)
+            logger.error(f"No processed file found in {session_dir}. Files present: {files_in_dir}")
+            return jsonify({
+                'error': 'Processed file not found',
+                'files_in_directory': files_in_dir,
+                'expected_file': 'sds_extraction_results.xlsx',
+                'session_dir': session_dir
+            }), 404
         else:
-            # Debug: List all files in the directory
-            try:
-                files_in_dir = os.listdir(upload_dir)
-                return jsonify({
-                    'error': 'No processed file found',
-                    'files_in_directory': files_in_dir,
-                    'upload_dir': upload_dir
-                }), 404
-            except:
-                return jsonify({'error': 'Upload directory not found'}), 404
+            logger.error(f"Session directory not found: {session_dir}")
+            return jsonify({
+                'error': 'Session directory not found',
+                'session_id': session_id,
+                'expected_dir': session_dir
+            }), 404
                 
     except Exception as e:
+        logger.error(f"Error downloading file for session {session_id}: {str(e)}")
+        return jsonify({'error': f'Error downloading file: {str(e)}'}), 500
+
+@app.route('/api/download/<session_id>/<filename>', methods=['GET'])
+def download_specific_file(session_id, filename):
+    """Download a specific file by session_id and filename"""
+    try:
+        session_dir = os.path.join(UPLOAD_FOLDER, session_id)
+        file_path = os.path.join(session_dir, secure_filename(filename))
+        
+        if os.path.exists(file_path):
+            logger.info(f"Serving specific file: {file_path}")
+            return send_file(file_path, as_attachment=True)
+        else:
+            logger.error(f"Specific file not found: {file_path}")
+            return jsonify({'error': f'File not found: {filename}'}), 404
+            
+    except Exception as e:
+        logger.error(f"Error downloading specific file {filename} for session {session_id}: {str(e)}")
         return jsonify({'error': f'Error downloading file: {str(e)}'}), 500
 
 # Debug endpoint to list files in session directory
