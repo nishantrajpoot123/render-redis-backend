@@ -666,33 +666,40 @@ def process_sds_files(self, session_id, pdf_file_paths, excel_file_path, merge_d
         )
         
         # Save to new Excel file
-        output_filename = f"extracted_msds_{session_id}.xlsx"
-        output_path = os.path.join("/tmp", output_filename)
+        # Fix for the download issue in your tasks.py
+        # Replace the file saving section in your process_sds_files task (around line 350-360)
+        
+        # Save to session directory instead of /tmp
+        session_dir = os.path.join(UPLOAD_FOLDER, session_id)
+        output_filename = f"sds_extraction_results.xlsx"
+        output_path = os.path.join(session_dir, output_filename)
+        
+        # Ensure session directory exists
+        os.makedirs(session_dir, exist_ok=True)
         
         # Save with proper formatting
         with pd.ExcelWriter(output_path, engine='openpyxl') as writer:
             combined_df.to_excel(writer, index=False, sheet_name='SDS_Data')
             
-        logger.info(f"Saved updated Excel file: {output_filename}")
+        logger.info(f"Saved updated Excel file to session directory: {output_path}")
         
-        # Prepare response message
-        message = f'Successfully processed {processed_files} PDF files'
-        if 'new_entries' in locals() and len(new_entries) > 0:
-            message += f', added {len(new_entries)} new entries'
-        else:
-            message += ', no new entries added'
-            if duplicate_check != "none":
-                message += f' (duplicate check: {duplicate_check})'
-            
-        if merge_duplicates and len(processed_data) != len(all_data):
-            message += f' (merged {len(all_data)} entries into {len(processed_data)} unique entries by CAS Number)'
+        # DON'T clean up session directory immediately - keep it for download
+        # Remove or comment out this section:
+        # try:
+        #     session_dir = os.path.join(UPLOAD_FOLDER, session_id)
+        #     if os.path.exists(session_dir):
+        #         shutil.rmtree(session_dir, ignore_errors=True)
+        #         logger.info(f"Cleaned up session directory: {session_id}")
+        # except Exception as e:
+        #     logger.warning(f"Failed to clean up session directory {session_id}: {str(e)}")
         
-        # Final result
+        # Update the result to include the correct filename
         result = {
             'success': True,
             'message': message,
-            'outputFile': output_filename,
+            'outputFile': output_filename,  # This should match what's in the session directory
             'sessionId': session_id,
+            'downloadUrl': f'/api/download/{session_id}',  # Add direct download URL
             'processedFiles': processed_files,
             'totalFiles': len(pdf_file_paths),
             'newEntriesAdded': len(new_entries) if 'new_entries' in locals() else len(new_data_df),
