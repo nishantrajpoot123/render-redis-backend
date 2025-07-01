@@ -164,22 +164,7 @@ def get_task_status(task_id):
             'error': f'Error getting task status: {str(e)}'
         }), 500
 
-@app.route('/api/download/<session_id>/<filename>', methods=['GET'])
-def download_file(session_id, filename):
-    try:
-        # Construct the full path using session_id
-        upload_dir = f"/tmp/sds_uploads/{session_id}"
-        file_path = os.path.join(upload_dir, secure_filename(filename))
-        
-        if os.path.exists(file_path):
-            return send_file(file_path, as_attachment=True)
-        else:
-            return jsonify({'error': f'File not found: {filename}'}), 404
-    except Exception as e:
-        return jsonify({'error': f'Error downloading file: {str(e)}'}), 500
 
-# Alternative: Download processed file by session_id only
-# Replace your download endpoints in app.py with this improved version
 
 @app.route('/api/download/<session_id>', methods=['GET'])
 def download_processed_file(session_id):
